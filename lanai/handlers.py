@@ -2,6 +2,8 @@
 import json
 import struct
 
+from socket import error as socket_error
+
 from lanai.connection import Connection
 from lanai.exceptions import LanaiError, PacketParseError
 
@@ -34,9 +36,12 @@ class ConnectionHandler(object):
     def read(self, length):
         data = ''
         while len(data) < length:
-            packet = self.connection.socket.recv(length - len(data))
+            try:
+                packet = self.connection.socket.recv(length - len(data))
+            except socket_error:
+                return
             if not packet:
-                return None
+                return
             data = '%s%s' % (data, packet)
         return data
 
@@ -48,8 +53,12 @@ class ConnectionHandler(object):
 
     def close(self):
         from gevent import socket
-        self.connection.socket.shutdown(socket.SHUT_WR)
-        self.connection.socket.close()
+
+        try:
+            self.connection.socket.shutdown(socket.SHUT_WR)
+            self.connection.socket.close()
+        except socket_error:
+            pass
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))
