@@ -53,6 +53,9 @@ class ConnectionHandler(object):
     def send(self, data):
         if isinstance(data, dict):
             data = json.dumps(data)
+        else:
+            # TODO invalid event response error
+            return
         data = (struct.pack('>I', len(data)) + data)
         try:
             self.connection.socket.send(data)
@@ -86,8 +89,7 @@ class ConnectionHandler(object):
             message = "'%s' event doesn't exits in %s protocol." % (event_name, protocol_name)
             raise InvalidEventError(message=message)
         response_data = event_func(data)
-        if isinstance(response_data, dict):
-            self.send(response_data)
+        self.send(response_data)
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))
