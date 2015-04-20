@@ -7,7 +7,7 @@ class LanaiError(Exception):
         self.code = code
 
 
-class PacketParseError(LanaiError):
+class InvalidPacketError(LanaiError):
     pass
 
 

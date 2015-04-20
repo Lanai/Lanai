@@ -5,18 +5,23 @@ import struct
 from socket import error as socket_error
 
 from lanai.connection import Connection
-from lanai.exceptions import LanaiError, PacketParseError
+from lanai.exceptions import (
+    LanaiError,
+    InvalidPacketError,
+    InvalidProtocolError,
+    InvalidEventError
+)
 
 
 class ConnectionHandler(object):
 
-    def __init__(self, socket, address_set, protocol_dict):
+    def __init__(self, socket, address_set, protocol_rule):
         self.connection = Connection(socket, address_set)
-        self.protocol_dict = protocol_dict
+        self.protocol_rule = protocol_rule
         self.handle()
 
     def handle(self):
-        while True:
+        while not self.connection.socket.closed:
             raw_data = self.read(4)
             if not raw_data:
                 self.close()
@@ -25,11 +30,11 @@ class ConnectionHandler(object):
             data = self.read(length)
             try:
                 data = json.loads(data)
-            except ValueError, e:
-                self.error_response(PacketParseError(e.message))
+            except (ValueError, TypeError):
+                message = "The type of packet must always json."
+                self.error_response(InvalidPacketError(message=message))
             try:
-                # TODO protocol processing.
-                pass
+                self.protocol_processor(data)
             except LanaiError, e:
                 self.error_response(e)
 
@@ -49,7 +54,10 @@ class ConnectionHandler(object):
         if isinstance(data, dict):
             data = json.dumps(data)
         data = (struct.pack('>I', len(data)) + data)
-        self.connection.socket.send(data)
+        try:
+            self.connection.socket.send(data)
+        except socket_error:
+            self.close()
 
     def close(self):
         from gevent import socket
@@ -59,6 +67,27 @@ class ConnectionHandler(object):
             self.connection.socket.close()
         except socket_error:
             pass
+
+    def protocol_processor(self, data):
+        if data is None:
+            message = "The type of packet must always json."
+            raise InvalidPacketError(message=message)
+
+        self.connection.update()
+        protocol_name = data.get('protocol', '')
+        protocol = self.protocol_rule.get(protocol_name, None)
+        if protocol is None:
+            message = "'%s' protocol doesn't exits." % protocol_name
+            raise InvalidProtocolError(message=message)
+
+        event_name = data.get('event', '')
+        event_func = protocol.event_rule.get(event_name, None)
+        if event_func is None:
+            message = "'%s' event doesn't exits in %s protocol." % (event_name, protocol_name)
+            raise InvalidEventError(message=message)
+        response_data = event_func(data)
+        if isinstance(response_data, dict):
+            self.send(response_data)
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))

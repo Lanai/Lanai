@@ -13,5 +13,5 @@ class LanaiServer(StreamServer):
         self.app = app
 
     def do_handle(self, *args):
-        args = args + (self.app.protocol_dict,)
+        args = args + (self.app.protocol_rule,)
         super(LanaiServer, self).do_handle(*args)
