@@ -1,7 +1,7 @@
 # -*-coding: utf8-*-
 
-from lanai.server import LanaiServer
 from lanai.app import Lanai
+from lanai.server import LanaiServer
 from lanai.protocol import Protocol
 
 protocol = Protocol('ping-pong')
