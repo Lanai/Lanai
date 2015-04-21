@@ -4,9 +4,9 @@ from gevent.server import StreamServer
 
 class LanaiServer(StreamServer):
 
-    def __init__(self, app):
+    def __init__(self, app, host, port):
         super(LanaiServer, self).__init__(
-            listener=(app.config['host'], app.config['port']),
+            listener=(host, port),
             handle=app.connection_handler_class
         )
         self.app = app
