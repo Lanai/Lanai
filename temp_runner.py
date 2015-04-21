@@ -18,5 +18,5 @@ def on_ping(data):
 app = Lanai()
 app.register_protocol(protocol)
 
-server = LanaiServer(app)
+server = LanaiServer(app, config['server']['host'], config['server']['port'])
 server.serve_forever()
