@@ -1,8 +1,12 @@
 # -*-coding: utf8-*-
+import yaml
 
-from lanai.server import LanaiServer
 from lanai.app import Lanai
+from lanai.server import LanaiServer
 from lanai.protocol import Protocol
+
+with open("config.yml", 'r') as ymlfile:
+    config = yaml.load(ymlfile)
 
 protocol = Protocol('ping-pong')
 
@@ -14,5 +18,5 @@ def on_ping(data):
 app = Lanai()
 app.register_protocol(protocol)
 
-server = LanaiServer(app)
+server = LanaiServer(app, config['server']['host'], config['server']['port'])
 server.serve_forever()
