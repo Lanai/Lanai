@@ -43,5 +43,11 @@ try:
     print >>sys.stderr, 'received "%s"' % data
 
 finally:
-    print >>sys.stderr, 'closing socket'
-    sock.close()
+    pass
+
+
+while True:
+    raw_data = read(4)
+    length = struct.unpack('>I', raw_data)[0]
+    data = read(length)
+    print >>sys.stderr, 'received "%s"' % data
