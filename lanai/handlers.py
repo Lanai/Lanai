@@ -15,9 +15,11 @@ from lanai.exceptions import (
 
 class ConnectionHandler(object):
 
-    def __init__(self, socket, address_set, protocol_rule):
+    def __init__(self, socket, address_set, app):
         self.connection = Connection(socket, address_set)
-        self.protocol_rule = protocol_rule
+        self.app = app
+        self.protocol_info = app.protocol_info
+        self.app.register_connection_handler(self)
         self.handle()
 
     def handle(self):
@@ -70,6 +72,7 @@ class ConnectionHandler(object):
             self.connection.socket.close()
         except socket_error:
             pass
+        self.app.unregister_connection_handler(self.connection.id)
 
     def protocol_processor(self, data):
         if data is None:
@@ -78,7 +81,7 @@ class ConnectionHandler(object):
 
         self.connection.update()
         protocol_name = data.get('protocol', '')
-        protocol = self.protocol_rule.get(protocol_name, None)
+        protocol = self.protocol_info.get(protocol_name, None)
         if protocol is None:
             message = "'%s' protocol doesn't exits." % protocol_name
             raise InvalidProtocolError(message=message)
@@ -89,7 +92,7 @@ class ConnectionHandler(object):
             message = "'%s' event doesn't exits in %s protocol." % (event_name, protocol_name)
             raise InvalidEventError(message=message)
         response_data = event_func(data)
-        self.send(response_data)
+        self.send(protocol.default_response_data(event_name, response_data))
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))
