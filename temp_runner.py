@@ -31,4 +31,5 @@ if __name__ == '__main__':
     app.register_protocol(protocol)
 
     server = LanaiServer(app, HOST, PORT)
+    print 'Server started on port {}'.format(PORT)
     server.serve_forever()
