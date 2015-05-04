@@ -25,8 +25,10 @@ def ping(_app):
     print 'ping'
     return dict(id=get_uuid())
 
-app = Lanai()
-app.register_protocol(protocol)
 
-server = LanaiServer(app, HOST, PORT)
-server.serve_forever()
+if __name__ == '__main__':
+    app = Lanai()
+    app.register_protocol(protocol)
+
+    server = LanaiServer(app, HOST, PORT)
+    server.serve_forever()
