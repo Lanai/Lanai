@@ -9,6 +9,9 @@ from lanai.utils import get_uuid
 with open("config.yml", 'r') as ymlfile:
     config = yaml.load(ymlfile)
 
+HOST = config['server']['host']
+PORT = config['server']['port']
+
 protocol = Protocol('ping-pong')
 
 
@@ -22,8 +25,11 @@ def ping(_app):
     print 'ping'
     return dict(id=get_uuid())
 
-app = Lanai()
-app.register_protocol(protocol)
 
-server = LanaiServer(app, config['server']['host'], config['server']['port'])
-server.serve_forever()
+if __name__ == '__main__':
+    app = Lanai()
+    app.register_protocol(protocol)
+
+    server = LanaiServer(app, HOST, PORT)
+    print 'Server started on port {}'.format(PORT)
+    server.serve_forever()
