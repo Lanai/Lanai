@@ -8,11 +8,9 @@ class Protocol(object):
         self.event_rule = dict()
         self.timer_rules = []
 
-    def event(self):
-        def decorator(f):
-            name = f.__name__.replace('on_', '')
-            self.event_rule[name] = f
-        return decorator
+    def event(self, f):
+        name = f.__name__.replace('on_', '')
+        self.event_rule[name] = f
 
     def timer(self, seconds, target_handlers=[], is_broadcast=True):
         def decorator(f):
