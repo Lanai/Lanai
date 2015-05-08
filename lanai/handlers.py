@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import json
 import struct
+import inspect
 
 from socket import error as socket_error
 
@@ -18,7 +19,6 @@ class ConnectionHandler(object):
     def __init__(self, socket, address_set, app):
         self.connection = Connection(socket, address_set)
         self.app = app
-        self.protocol_info = app.protocol_info
         self.app.register_connection_handler(self)
         self.handle()
 
@@ -29,14 +29,14 @@ class ConnectionHandler(object):
                 self.close()
                 break
             length = struct.unpack('>I', raw_data)[0]
-            data = self.read(length)
+            packet = self.read(length)
             try:
-                data = json.loads(data)
+                packet = json.loads(packet)
             except (ValueError, TypeError):
                 message = "The type of packet must always json."
                 self.error_response(InvalidPacketError(message=message))
             try:
-                self.protocol_processor(data)
+                self.protocol_processor(packet)
             except LanaiError, e:
                 self.error_response(e)
 
@@ -74,25 +74,32 @@ class ConnectionHandler(object):
             pass
         self.app.unregister_connection_handler(self.connection.id)
 
-    def protocol_processor(self, data):
-        if data is None:
+    def protocol_processor(self, packet):
+        if packet is None:
             message = "The type of packet must always json."
             raise InvalidPacketError(message=message)
 
         self.connection.update()
-        protocol_name = data.get('protocol', '')
-        protocol = self.protocol_info.get(protocol_name, None)
+        protocol_name = packet.get('protocol', '')
+        protocol = self.app.protocol_info.get(protocol_name, None)
         if protocol is None:
             message = "'%s' protocol doesn't exits." % protocol_name
             raise InvalidProtocolError(message=message)
 
-        event_name = data.get('event', '')
+        event_name = packet.get('event', '')
         event_func = protocol.event_rule.get(event_name, None)
         if event_func is None:
             message = "'%s' event doesn't exits in %s protocol." % (event_name, protocol_name)
             raise InvalidEventError(message=message)
-        response_data = event_func(data)
-        self.send(protocol.default_response_data(event_name, response_data))
+        data = packet.get('data', {})
+        args_count = len(inspect.getargspec(event_func).args)
+        if args_count >= 2:
+            args = (self, data)
+        else:
+            args = (data,)
+        response_data = event_func(*args)
+        if response_data is not None:
+            self.send(protocol.default_response_data(event_name, response_data))
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))
