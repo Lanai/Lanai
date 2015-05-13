@@ -1,12 +1,14 @@
 # -*- coding:utf-8 -*-
+from __future__ import absolute_import
+
 import json
 import struct
 import inspect
 
 from socket import error as socket_error
 
-from lanai.connection import Connection
-from lanai.exceptions import (
+from .connection import Connection
+from .exceptions import (
     LanaiError,
     InvalidPacketError,
     InvalidProtocolError,

@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
-from lanai.handlers import ConnectionHandler
-from lanai.utils import get_uuid
+from __future__ import absolute_import
+
+from .handlers import ConnectionHandler
+from .utils import get_uuid
 
 
 class Lanai(object):
