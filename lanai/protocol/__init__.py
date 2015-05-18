@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# -*-coding: utf8-*-
 
 
 class Protocol(object):
@@ -22,5 +22,5 @@ class Protocol(object):
             ))
         return decorator
 
-    def default_response_data(self, event_name, data):
-        return dict(protocol=self.name, event_name=event_name, data=data)
+    def get_cleaned_response_data(self, event_name, data):
+        return dict(protocol=self.name, event=event_name, data=data)
