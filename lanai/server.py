@@ -11,6 +11,7 @@ class LanaiServer(StreamServer):
             handle=app.connection_handler_class
         )
         self.app = app
+        self.extra_spawn_funcs = []
 
     def do_handle(self, *args):
         args = args + (self.app,)
@@ -20,6 +21,7 @@ class LanaiServer(StreamServer):
         spawn = self._spawn
         if spawn is None:
             return
+        spawn(self._redis_subscribe)
         for protocol in self.app.protocol_info.values():
             for rule in protocol.timer_rules:
                 func_args = (
@@ -46,3 +48,33 @@ class LanaiServer(StreamServer):
                 response_data = protocol.default_response_data(func.__name__, data)
                 handler.send(response_data)
             sleep(seconds)
+
+    def _redis_subscribe(self):
+        import json
+
+        from lanai.globals import redis_session
+        from lanai.chat import channel_prefix
+        from lanai.chat.channel import get_channel, channels
+
+        pubsub = redis_session.pubsub()
+        pubsub.psubscribe('*')
+        while pubsub.subscribed:
+            message = pubsub.get_message()
+            if message is not None:
+                channel_name = message.get('channel', None)
+                if channel_name is None:
+                    continue
+                channel_name = channel_name.replace(channel_prefix, '')
+                try:
+                    data = json.loads(message.get('data', None))
+                except (TypeError, ValueError):
+                    continue
+                sender_connection_id = data.get('sender_connection_id', None)
+                message = data.get('message', None)
+                channel = get_channel(channel_name)
+                print channel_name
+                if channel is not None:
+                    data = dict(message=message)
+                    channel.publish(data, sender_connection_id)
+            else:
+                sleep()
