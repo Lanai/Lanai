@@ -21,3 +21,7 @@ class InvalidProtocolError(LanaiError):
 
 class InvalidEventError(LanaiError):
     pass
+
+
+class InvalidDataError(LanaiError):
+    pass
