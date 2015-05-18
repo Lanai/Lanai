@@ -13,7 +13,7 @@ protocol = Protocol('hello-world')
 @protocol.event
 def on_hello(data):
     return dict(message='Hello World')
-    
+
 app = Lanai()
 app.register_protocol(protocol)
 
