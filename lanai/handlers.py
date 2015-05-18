@@ -101,7 +101,10 @@ class ConnectionHandler(object):
             args = (data,)
         response_data = event_func(*args)
         if response_data is not None:
-            self.send(protocol.default_response_data(event_name, response_data))
+            response_data = protocol.get_cleaned_response_data(
+                event_name, response_data
+            )
+            self.send(response_data)
 
     def error_response(self, error):
         data = dict(status=dict(code=error.code, message=error.message))
