@@ -1,4 +1,6 @@
 # Lanai
+[![Build Status](https://travis-ci.org/Lanai/Lanai.svg?branch=travis)](https://travis-ci.org/Lanai/Lanai)
+
 Lanai is a microframework for tcp server.
 
 ## How to use
@@ -13,7 +15,7 @@ protocol = Protocol('hello-world')
 @protocol.event
 def on_hello(data):
     return dict(message='Hello World')
-    
+
 app = Lanai()
 app.register_protocol(protocol)
 
