@@ -8,3 +8,6 @@ install:
   - pip install -r requirements.txt
 
 script: nosetests
+
+notifications:
+  slack: lanai:CXAPx4LjajvpHJt6z6N097bL
