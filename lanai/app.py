@@ -22,3 +22,22 @@ class Lanai(object):
 
     def unregister_connection_handler(self, connection_id):
         del self.connection_handler_info[connection_id]
+
+    def handle_timer(self,
+                     protocol,
+                     func,
+                     seconds,
+                     target_handlers,
+                     is_broadcast):
+        from gevent import sleep
+
+        while True:
+            if is_broadcast:
+                target_handlers = self.connection_handler_info.values()
+            for handler in target_handlers:
+                data = func(handler)
+                response_data = protocol.get_cleaned_response_data(
+                    func.__name__, data
+                )
+                handler.send(response_data)
+            sleep(seconds)

@@ -31,30 +31,15 @@ class LanaiServer(StreamServer):
                     rule['target_handlers'],
                     rule['is_broadcast'],
                 )
-                spawn(self._run_timer, *func_args)
+                spawn(self.app.handle_timer, *func_args)
         super(LanaiServer, self).serve_forever(*args, **kwargs)
-
-    def _run_timer(self,
-                   protocol,
-                   func,
-                   seconds,
-                   target_handlers,
-                   is_broadcast):
-        while True:
-            if is_broadcast:
-                target_handlers = self.app.connection_handler_info.values()
-            for handler in target_handlers:
-                data = func(self.app)
-                response_data = protocol.default_response_data(func.__name__, data)
-                handler.send(response_data)
-            sleep(seconds)
 
     def _redis_subscribe(self):
         import json
 
         from lanai.globals import redis_session
         from lanai.chat import channel_prefix
-        from lanai.chat.channel import get_channel, channels
+        from lanai.chat.channel import get_channel
 
         pubsub = redis_session.pubsub()
         pubsub.psubscribe('*')
@@ -72,7 +57,6 @@ class LanaiServer(StreamServer):
                 sender_connection_id = data.get('sender_connection_id', None)
                 message = data.get('message', None)
                 channel = get_channel(channel_name)
-                print channel_name
                 if channel is not None:
                     data = dict(message=message)
                     channel.publish(data, sender_connection_id)
