@@ -28,22 +28,12 @@ def read(_length):
     return _data
 
 
-try:
-    # Send data
-    data = dict(protocol='ping-pong', event='ping')
-    data = json.dumps(data)
-    print >>sys.stderr, 'sending "%s"' % data
-    data = (struct.pack('>I', len(data)) + data)
-    sock.sendall(data)
-
-    # Look for the response
-    raw_data = read(4)
-    length = struct.unpack('>I', raw_data)[0]
-    data = read(length)
-    print >>sys.stderr, 'received "%s"' % data
-
-finally:
-    pass
+def send(_data):
+    global sock
+    _data = json.dumps(_data)
+    _data = (struct.pack('>I', len(_data)) + _data)
+    sock.sendall(_data)
+    print >>sys.stderr, 'sending "%s"' % _data
 
 
 while True:
@@ -51,3 +41,10 @@ while True:
     length = struct.unpack('>I', raw_data)[0]
     data = read(length)
     print >>sys.stderr, 'received "%s"' % data
+    data = json.loads(data)
+    protocol = data.get('protocol', None)
+    event = data.get('event', None)
+    if protocol == 'ping-pong' and event == 'ping':
+        ping_id = data['data'].get('id')
+        send(dict(protocol=protocol, event='pong', data=dict(id=ping_id)))
+
