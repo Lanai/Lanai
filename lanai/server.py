@@ -32,7 +32,10 @@ class LanaiServer(StreamServer):
                     rule['is_broadcast'],
                 )
                 spawn(self.app.handle_timer, *func_args)
-        super(LanaiServer, self).serve_forever(*args, **kwargs)
+        try:
+            super(LanaiServer, self).serve_forever(*args, **kwargs)
+        except KeyboardInterrupt:
+            pass
 
     def _redis_subscribe(self):
         import json
