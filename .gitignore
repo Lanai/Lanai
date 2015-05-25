@@ -1,3 +1,7 @@
+build/
+dist/
+lanai.egg-info/
 *.pyc
+*.egg
 .*.swp
 .*.swo
