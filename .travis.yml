@@ -5,6 +5,8 @@ python:
   - 2.7
 
 install:
-  - pip install -r requirements.txt
+  - pip install pytest
+  - python setup.py develop
 
-script: nosetests
+script:
+  - py.test
